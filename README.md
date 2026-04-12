@@ -135,32 +135,43 @@ print(f"覆盖率: {coverage.coverage_rate:.2%}")
 
 ```
 AITestFlow/
-├── src/                          # 源代码
-│   ├── skills/                   # 技能模块
-│   │   ├── api_parser.py        # OpenAPI解析器
-│   │   ├── condition_gen.py     # 条件生成器
-│   │   ├── scenario_gen.py      # 场景生成器
-│   │   ├── code_gen.py          # 代码生成器
-│   │   └── evaluator.py         # 覆盖率评估器
-│   ├── prompts/                  # LLM提示词模板
-│   │   ├── gen_conditions.txt   # 条件生成提示
-│   │   ├── gen_scenarios.txt    # 场景生成提示
-│   │   └── gen_code.txt         # 代码生成提示
+├── app.py                        # Streamlit Web 入口
+├── requirements.txt              # Python依赖
+├── README.md                     # 项目说明
+├── .gitignore                    # Git忽略规则
+├── input/                        # 输入OpenAPI规范
+│   └── sample_petstore.yaml      # 示例API规范
+├── output/                       # 运行生成产物
+│   ├── test_api.py               # 生成的pytest测试代码
+│   ├── coverage_report.json      # 覆盖率报告（mock验证口径）
+│   ├── design_report.md          # EP/BVA与样例测试设计报告
+│   └── workflow_log.txt          # 流水线执行日志
+├── docs/                         # 文档与提交示例
+│   └── Example_Submission_AITestFlow.md
+├── scripts/                      # 脚本工具
+│   └── run_pipeline_once.py      # 单次运行流水线脚本
+├── src/                          # 核心源码
+│   ├── __init__.py
 │   ├── coordinator.py            # 工作流协调器
-│   ├── llm_client.py             # LLM客户端
-│   ├── models.py                 # 数据模型
-│   └── validator.py              # 测试验证器
-├── input/                        # 输入文件
-│   └── sample_petstore.yaml      # 示例OpenAPI规范
-├── output/                       # 输出文件
-│   ├── test_api.py               # 生成的测试代码
-│   ├── coverage_report.json      # 覆盖率报告
-│   └── workflow_log.txt          # 工作流日志
-├── tests/                        # 测试文件
-│   └── test_integration.py       # 集成测试
-├── app.py                        # Streamlit应用
-├── requirements.txt              # 依赖列表
-└── README.md                     # 项目文档
+│   ├── design_report.py          # 设计报告渲染器（生成design_report.md）
+│   ├── llm_client.py             # LLM调用封装
+│   ├── models.py                 # Pydantic数据模型
+│   ├── validator.py              # pytest mock验证与失败映射
+│   ├── prompts/                  # 提示词模板
+│   │   ├── parse_api.txt
+│   │   ├── gen_conditions.txt
+│   │   ├── gen_scenarios.txt
+│   │   └── gen_code.txt
+│   └── skills/                   # 流程分阶段能力模块
+│       ├── __init__.py
+│       ├── api_parser.py
+│       ├── condition_gen.py
+│       ├── scenario_gen.py
+│       ├── code_gen.py
+│       └── evaluator.py
+└── tests/
+    ├── __init__.py
+    └── test_integration.py
 ```
 
 ### 💡 使用示例

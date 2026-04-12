@@ -52,7 +52,7 @@ Emits a JSON object `{"python_code": "..."}` containing a pytest module that cal
 
 **Model-generated outputs (this run):**
 
-- `output/test_api.py` — header timestamp **2026-04-12T20:32:39.816268**  
+- `output/test_api.py` — header timestamp **2026-04-12T23:10:21.049795**  
 - `output/design_report.md` — **auto-generated** EP / BVA / sample-case tables per endpoint (`src/design_report.py`)
 
 ---
@@ -61,43 +61,43 @@ Emits a JSON object `{"python_code": "..."}` containing a pytest module that cal
 
 **Data source:** Metrics and tables below match:
 
-- `output/coverage_report.json` — **timestamp** `2026-04-12T20:32:39.819188`  
-- `output/test_api.py` — first-occurrence `test_scenarios` blocks per endpoint  
-- `output/design_report.md` — same conditions / test cases in long-form tables  
+- `output/coverage_report.json` — **timestamp** `2026-04-12T23:10:21.052796`  
+- `output/test_api.py` — generated pytest module for this run  
+- `output/design_report.md` — EP / BVA / sample-case tables used as the primary design-side evidence in this section  
 
 ### 3.0 Aggregate coverage report (`coverage_report.json`)
 
 | Field | Value |
 |-------|--------|
 | `coverage_definition` | Weighted **mock pytest** validation: **Σ validated_covered_count_i / Σ total_conditions_i** per endpoint (see JSON for full text). |
-| `total_conditions` | **69** |
-| `validated_covered_count` | **69** |
+| `total_conditions` | **67** |
+| `validated_covered_count` | **67** |
 | `coverage_rate` | **1.0** (100%) |
-| `covered_condition_ids` | **62** strings (**global union** of IDs still present after validation; same text reused on different endpoints appears once). |
+| `covered_condition_ids` | **59** strings (**global union** of IDs still present after validation; same text reused on different endpoints appears once). |
 | `failed_test_cases` | **[]** |
-| `iteration` | **2** |
+| `iteration` | **3** |
 | `endpoints_processed` | **5** (matches OpenAPI operations processed) |
 
-**Related metric (different definition):** **Contract-level response coverage** — fraction of **OpenAPI-declared operation–status pairs** that appear as **`expected_status`** in generated tests — is **~66.7%** for this spec (**§3.4**). This is **not** the same as `coverage_rate` in the JSON.
+**Related metric (different definition):** **Contract-level response coverage** — fraction of **OpenAPI-declared operation–status pairs** that appear as **`expected_status`** in generated design scenarios — is **~53.3%** for this spec (**§3.4**). This is **not** the same as `coverage_rate` in the JSON.
 
 **Per-endpoint snapshot (abbreviated):**
 
 | Method | Path | `total_conditions` | `validated_covered_count` | `coverage_rate` |
 |--------|------|-------------------|---------------------------|-----------------|
-| GET | `/pets` | 18 | 18 | 1.0 |
+| GET | `/pets` | 13 | 13 | 1.0 |
 | POST | `/pets` | 23 | 23 | 1.0 |
 | GET | `/pets/{petId}` | 8 | 8 | 1.0 |
-| DELETE | `/pets/{petId}` | 7 | 7 | 1.0 |
-| POST | `/pets/{petId}/vaccinations` | 13 | 13 | 1.0 |
+| DELETE | `/pets/{petId}` | 8 | 8 | 1.0 |
+| POST | `/pets/{petId}/vaccinations` | 15 | 15 | 1.0 |
 
 ### 3.1 Equivalence partitioning — condition IDs (global union)
 
-The **62** IDs in `covered_condition_ids` are listed in `coverage_report.json`. By **keyword** (for quick EP/BVA discussion):
+The **59** IDs in `covered_condition_ids` are listed in `coverage_report.json`. By **keyword** (for quick EP/BVA discussion):
 
 | Bucket | Count | Interpretation |
 |--------|-------|----------------|
 | IDs containing `boundary` | **12** | Boundary-oriented partitions |
-| IDs containing `invalid` | **31** | Invalid type / range / enum / semantic |
+| IDs containing `invalid` | **28** | Invalid type / range / enum / semantic |
 | Neither (treated as **valid-class** here) | **19** | Valid partitions |
 
 *(For submission-style rows with descriptions, use **`output/design_report.md`**, built from each `EPCondition`’s `description` and `partition_type`.)*
@@ -163,32 +163,30 @@ The **62** IDs in `covered_condition_ids` are listed in `coverage_report.json`. 
 | TC002 | `/pets/1/vaccinations` | Flu + date | 201 | `petid_boundary_1`, `vaccine_name_valid_2`, `date_valid_1` |
 | TC_NEG_003 | `/pets/100/vaccinations` | `vaccine_name=123` | 400 | `vaccine_name_invalid_type_number` |
 
-### 3.4 Contract-level response coverage (OpenAPI vs generated `expected_status`)
+### 3.4 Contract-level response coverage (OpenAPI vs `design_report.md` expected statuses)
 
-The **100%** figure in §3.0 counts **EP/BVA conditions** validated under **mock pytest**. A separate question is whether every **HTTP status** that the **OpenAPI document explicitly lists** for an operation is represented by at least one generated scenario (`expected_status` in `output/test_api.py`). If a status is declared but no test expects it, that is a **contract response gap** (incomplete coverage of the published contract surface), independent of mock condition coverage.
+The **100%** figure in §3.0 counts **EP/BVA conditions** validated under **mock pytest**. A separate question is whether every **HTTP status** explicitly declared in OpenAPI responses appears in at least one generated scenario. Here we use **`output/design_report.md` sample test cases** as the exercised set and compare them directly against `input/sample_petstore.yaml`.
 
-**Declared vs exercised (artifact: `input/sample_petstore.yaml`; exercised set verified: no `404` or `500` appears in `output/test_api.py`).**
-
-| Operation | Status codes in OpenAPI | Status codes present in generated tests |
-|-----------|-------------------------|----------------------------------------|
+| Operation | Status codes in OpenAPI (`sample_petstore.yaml`) | Status codes exercised in `design_report.md` |
+|-----------|---------------------------------------------------|----------------------------------------------|
 | `GET /pets` | 200, 400, **500** | 200, 400 |
 | `POST /pets` | 201, 400, **500** | 201, 400 |
 | `GET /pets/{petId}` | 200, **404**, **500** | 200, 400 |
 | `DELETE /pets/{petId}` | 204, **404**, **500** | 204, 400 |
 | `POST /pets/{petId}/vaccinations` | 201, 400, **404** | 201, 400 |
 
-**Counts (treating each operation–status pair once):**
+**Counts (operation–status pairs):**
 
-- **Declared pairs:** **15** (sum of the five row counts above).
-- **Pairs with ≥1 matching `expected_status`:** **10**.
-- **Declared pairs never targeted:** **7** — all **500** where the spec lists them (**4** operations), plus **404** on `GET`/`DELETE` `/{petId}` and **404** on `POST .../vaccinations` (**3** operations).
+- **Declared pairs:** **15**.
+- **Declared pairs exercised by at least one scenario:** **8**.
+- **Declared but not exercised:** **7** (all declared **500** responses on 4 operations + all declared **404** responses on 3 operations).
 
-**Contract response coverage (declared statuses that have a test expectation):** **10 / 15 ≈ 66.7%**.
+**Contract response coverage:** **8 / 15 ≈ 53.3%**.
 
-**Additional design gaps (not separate status rows but relevant to “full” black-box breadth):**
+**Observed mismatch pattern (important for interpretation):**
 
-- **`GET /pets`:** query parameters are optional; the design tables show scenarios that always include at least one query parameter—**no explicit “no query string”** happy-path row.
-- **`POST /pets`:** `requestBody` is required and `name` is the only required field in `PetInput`; the sample matrix does not highlight **empty body**, **missing `name`**, or **minimal valid body** as first-class rows (may or may not appear in code; they are not emphasized in `design_report.md`).
+- For `GET/DELETE /pets/{petId}`, current design emphasizes **path-parameter validation** and generates `400`, while the spec’s non-success branch is modeled as **404** (not found) plus `500`.
+- No scenario currently targets any declared `500` response (fault-injection style behavior is not modeled in this run).
 
 ---
 
@@ -196,15 +194,15 @@ The **100%** figure in §3.0 counts **EP/BVA conditions** validated under **mock
 
 ### 4.1 Coverage of EP/BVA and test cases
 
-- **Primary metric (assignment-friendly):** `coverage_rate` = **validated_covered_count / total_conditions** = **69/69 = 100%** for this run. Each term is summed **per endpoint** after **mock pytest**: condition IDs are removed from the “covered” set when mapped tests **fail** (`src/validator.py` + `src/coordinator.py`).
+- **Primary metric (assignment-friendly):** `coverage_rate` = **validated_covered_count / total_conditions** = **67/67 = 100%** for this run. Each term is summed **per endpoint** after **mock pytest**: condition IDs are removed from the “covered” set when mapped tests **fail** (`src/validator.py` + `src/coordinator.py`).
 - **`per_endpoint_coverage`** in `coverage_report.json` supports **§4.1** tables: for each operation you can report EP/BVA condition counts and whether mock validation kept full coverage.
-- **`covered_condition_ids` (62)** is the **sorted union** of ID strings still covered somewhere; **69 − 62 = 7** reflects **reuse of the same id text on more than one endpoint** (e.g. `petId_boundary_1` on both GET and DELETE), not failed tests.
-- **Do not conflate with contract coverage:** **§3.4** shows that **mock condition coverage can be 100%** while **OpenAPI-declared response codes** are only partially represented (**~66.7%** for this spec).
+- **`covered_condition_ids` (59)** is the **sorted union** of ID strings still covered somewhere; **67 − 59 = 8** reflects **ID-text reuse across endpoints** (e.g. `petId_boundary_1` appears in both GET and DELETE), not failed tests.
+- **Do not conflate with contract coverage:** **§3.4** shows that **mock condition coverage can be 100%** while **OpenAPI-declared response coverage** is only **~53.3%** in this run.
 - **Human-readable EP/BVA/TC tables:** `output/design_report.md` aligns with coursework-style “Equivalence partitioning / BVA / sample test cases” presentation.
 
 ### 4.2 Missing-item analysis
 
-- **Contract responses:** Missing expectations for **404** (resource not found) and **500** (server error) where the spec lists them—see **§3.4**. Improving prompts or post-processing to **enumerate declared responses per operation** and require at least one scenario (or an explicit “not testable without fault injection” note) would close this gap in reporting and design.
+- **Contract responses:** Missing expectations for all declared **404** and **500** branches in this run’s design tables—see **§3.4**. Improving prompts/post-processing to enumerate declared responses per operation and require at least one scenario (or an explicit “not testable without fault injection” annotation) would close this gap.
 - **Naming:** Mixed **`petId` / `petid`** in IDs persists; hurts traceability when merging reports.
 - **Merged `test_api.py`:** Duplicate **`make_request`** blocks and repeated **`test_scenarios`** sections remain a **static-quality** issue for reviewers (not reflected in mock `failed_test_cases`).
 - **Spec vs implementation:** Even where **400** is expected, a live service might return **404** or **422**; contract-level tables still help separate “what we asserted” from “what the spec promised.”
@@ -233,7 +231,7 @@ Limitations include naming drift, merged-code duplication, mock-only validation,
 
 ### 5.3 Summary  
 
-On **`input/sample_petstore.yaml`**, this run produced **69** conditions (summed across **5** endpoints), **100% weighted validated coverage** under mock pytest, **62** distinct condition-id strings in the global union, **no failed test records** in `coverage_report.json`, **`output/design_report.md`** for coursework-style tables, and merged **`output/test_api.py`** with traceable **`covered_condition_ids`**. Separately, **§3.4** records **~66.7% contract-level response coverage** (10 of 15 declared operation–status pairs have a matching `expected_status`), highlighting **404** and **500** as the main omitted expectations.
+On **`input/sample_petstore.yaml`**, this run produced **67** conditions (summed across **5** endpoints), **100% weighted validated coverage** under mock pytest, **59** distinct condition-id strings in the global union, **no failed test records** in `coverage_report.json`, **`output/design_report.md`** for coursework-style tables, and merged **`output/test_api.py`** with traceable **`covered_condition_ids`**. Separately, **§3.4** records **~53.3% contract-level response coverage** (8 of 15 declared operation–status pairs exercised in `design_report.md`), with declared **404/500** branches as the major omissions.
 
 ---
 
