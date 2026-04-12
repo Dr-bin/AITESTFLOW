@@ -23,7 +23,14 @@ class TestCase(BaseModel):
     test_id: str = Field(..., description="Unique test case identifier")
     endpoint: str = Field(..., description="API endpoint path")
     method: str = Field(..., description="HTTP method")
-    payload: Dict[str, Any] = Field(..., description="Request payload")
+    query: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Query string parameters (GET/DELETE or query-style args)",
+    )
+    payload: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="JSON request body for POST/PUT/PATCH",
+    )
     expected_status: int = Field(..., description="Expected HTTP status code")
     covered_condition_ids: List[str] = Field(
         ..., description="List of condition IDs covered by this test"

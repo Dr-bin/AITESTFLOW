@@ -83,7 +83,8 @@ def render_test_code(scenarios: List[TestCase], base_url: str = "http://localhos
             "test_id": s.test_id,
             "endpoint": s.endpoint,
             "method": s.method,
-            "payload": s.payload,
+            "query": s.query or {},
+            "payload": s.payload or {},
             "expected_status": s.expected_status,
             "covered_condition_ids": s.covered_condition_ids,
         }

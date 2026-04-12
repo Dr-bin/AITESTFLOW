@@ -132,6 +132,7 @@ class WorkflowCoordinator:
             conditions,
             endpoint=endpoint_meta.get("path", "/api"),
             method=endpoint_meta.get("method", "GET"),
+            endpoint_meta=endpoint_meta,
         )
         self._log(f"Generated {len(test_cases)} test cases")
 
@@ -159,6 +160,9 @@ class WorkflowCoordinator:
                     endpoint_meta["path"],
                     current_code,
                     state,
+                    test_case_index={
+                        tc.test_id: list(tc.covered_condition_ids) for tc in test_cases
+                    },
                 )
             except Exception as e:
                 self._log(f"Validation error: {e}")
@@ -230,6 +234,8 @@ class WorkflowCoordinator:
             f"{chr(10).join(uncovered_details)}\n\n"
             f"Failed test cases: {json.dumps(failed, indent=2)}\n\n"
             f"Please generate additional test cases to cover these gaps. "
+            f"Use the same conventions as before: each scenario has query, payload, "
+            f"expected_status, and make_request(..., expected_status=...). "
             f"Return the complete updated test code."
         )
 
@@ -265,11 +271,13 @@ def make_request(
     endpoint: str,
     params: Optional[Dict] = None,
     data: Optional[Dict] = None,
-    headers: Optional[Dict] = None
+    headers: Optional[Dict] = None,
+    expected_status: int = 200,
 ) -> requests.Response:
-    """Helper function to make HTTP requests with error handling"""
+    """HTTP helper; expected_status is accepted so generated tests share one signature."""
+    _ = expected_status
     url = f"{BASE_URL}{endpoint}"
-    
+
     try:
         if method == "GET":
             return requests.get(url, params=params, headers=headers, timeout=10)
@@ -314,24 +322,10 @@ def make_request(
         return final_code.strip() + "\n"
 
     def _clean_code_section(self, code: str) -> str:
-        """Clean a code section by removing duplicates and normalizing"""
+        """Strip leading module docstring only (do not dedupe lines — that breaks test data)."""
         code = re.sub(r'^"""[\s\S]*?"""', '', code, count=1)
         code = re.sub(r"^'''[\s\S]*?'''", '', code, count=1)
-        
-        lines = code.split('\n')
-        seen_lines = set()
-        cleaned_lines = []
-        
-        for line in lines:
-            stripped = line.strip()
-            
-            if stripped and stripped not in seen_lines:
-                seen_lines.add(stripped)
-                cleaned_lines.append(line)
-            elif not stripped:
-                cleaned_lines.append(line)
-        
-        return '\n'.join(cleaned_lines)
+        return code
 
     def _write_output(self, content: str, filename: str) -> None:
         """Write content to output file"""

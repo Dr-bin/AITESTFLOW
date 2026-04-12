@@ -1,57 +1,33 @@
-Combine the generated conditions into executable test scenarios for the specified API endpoint.
+You are a test designer. Build executable black-box test cases for ONE endpoint from the given conditions.
 
-Conditions: CONDITIONS_PLACEHOLDER
-Endpoint: ENDPOINT_PLACEHOLDER
-Method: METHOD_PLACEHOLDER
+Endpoint path (exact string, do not change): ENDPOINT_PLACEHOLDER
+HTTP method (exact): METHOD_PLACEHOLDER
 
-CRITICAL REQUIREMENTS:
-1. Use the EXACT endpoint path provided above (do not change it)
-2. Generate test scenarios ONLY for this specific endpoint
-3. Each test case must reference the correct endpoint path
-4. Map covered_condition_ids accurately to the conditions provided
-5. **IMPORTANT**: Ensure EVERY condition from the conditions list is covered by at least one test case
-6. Generate enough test cases to achieve 100% condition coverage
-7. If a condition cannot be combined with others, create a dedicated test case for it
-8. Count the conditions and verify all are covered before generating output
+Conditions (JSON array):
+CONDITIONS_PLACEHOLDER
 
-Generate test scenarios as a JSON array with the following structure:
-[
-  {
-    "test_id": "TC001",
-    "endpoint": "EXACT_PATH_FROM_ABOVE",
-    "method": "METHOD_FROM_ABOVE",
-    "payload": {"key": "value"},
-    "expected_status": 200,
-    "covered_condition_ids": ["condition_id_1", "condition_id_2"]
-  }
-]
+OUTPUT
+Return a single JSON object: { "test_cases": [ ... ] }.
+Each test case MUST have:
+- "test_id": unique string (e.g. TC001, TC_NEG_001, TC_BVA_001)
+- "endpoint": MUST equal ENDPOINT_PLACEHOLDER except you MAY substitute path parameters with concrete values (e.g. /pets/5 for /pets/{petId})
+- "method": MUST equal METHOD_PLACEHOLDER
+- "query": object — query-string parameters for this call (use {} if none)
+- "payload": object — JSON request body for POST/PUT/PATCH (use {} if none)
+- "expected_status": integer HTTP status you expect (200, 201, 204, 400, 404, 422, etc.)
+- "covered_condition_ids": array of condition ids from the input list that this test is meant to satisfy
 
-SCENARIO GENERATION RULES:
-1. Positive test cases:
-   - Combine multiple valid conditions into single test cases
-   - Test with all required parameters present
-   - Test with optional parameters included/excluded
-   - Expected status: 200, 201, or 204 based on method
+PARAMETER PLACEMENT (critical)
+- GET / HEAD / DELETE: put non-path parameters in "query" unless the spec says they are headers. "payload" should almost always be {}.
+- POST / PUT / PATCH: put body fields in "payload". Put query-style parameters in "query" if the spec places them in query.
+- Path parameters: never invent new path keys; embed values in "endpoint" path segments.
 
-2. Negative test cases:
-   - Test each invalid condition separately for clear error attribution
-   - Test missing required parameters
-   - Test invalid parameter combinations
-   - Expected status: 400, 404, or 422 based on error type
+COVERAGE (critical)
+- Every condition id appearing in the input MUST appear in at least one test case's "covered_condition_ids".
+- Prefer merging compatible valid conditions into fewer positive tests.
+- For invalid / boundary-invalid cases, isolate the violating parameter when possible so expected_status and diagnosis stay clear.
 
-3. Boundary test cases:
-   - Test boundary values individually
-   - Combine boundary values with valid parameters
-   - Expected status: 200 for valid boundaries, 400 for invalid
+EXPECTED STATUS
+- Align with the OpenAPI responses section when possible. If ambiguous, use 400 for client validation errors and 404 for missing resources.
 
-4. Parameter handling:
-   - For GET requests: put parameters in query string (payload can be empty {})
-   - For POST/PUT/PATCH: put parameters in request body (payload)
-   - For path parameters: include them in the endpoint path
-
-TEST ID NAMING:
-- Positive tests: TC001, TC002, TC003...
-- Negative tests: TC_NEG_001, TC_NEG_002...
-- Boundary tests: TC_BVA_001, TC_BVA_002...
-
-Output ONLY a valid JSON array, no markdown code blocks or explanations.
+Output ONLY one JSON object (no markdown fences, no commentary).

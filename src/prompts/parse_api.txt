@@ -1,22 +1,18 @@
-Extract API endpoint information from the following OpenAPI/Swagger specification.
+Optional helper prompt — the default pipeline uses deterministic parsing in src/skills/api_parser.py. Use this only if you replace the parser with an LLM fallback.
 
-Input: {api_spec}
+Task: From the following OpenAPI 3.x document (JSON or YAML text), produce a JSON object with key "endpoints" whose value is a list of objects compatible with the internal schema used by AITestFlow:
 
-Extract and return a JSON list with the following structure for each endpoint:
-[
-  {
-    "path": "endpoint path",
-    "method": "HTTP method (GET/POST/PUT/DELETE/PATCH)",
-    "parameters": [
-      {
-        "name": "parameter name",
-        "type": "parameter type (string/integer/boolean/array/object)",
-        "required": true/false,
-        "constraints": "any constraints or validation rules",
-        "description": "parameter description"
-      }
-    ]
-  }
-]
+Each endpoint object:
+- "path": string
+- "method": GET|POST|PUT|DELETE|PATCH|OPTIONS|HEAD (uppercase)
+- "parameters": list of { "name", "in" (path|query|header|cookie), "type", "required" (bool), "description", "constraints" (string summary of min/max/enum/pattern) }
+- "requestBody": null or { "required", "content_type", "properties" (map of name to empty object or type hint), "required_fields" (list of strings), "schema" (object) }
+- "responses": copy of operation responses if present, else {}
+- "constraints": { "parameters": {...}, "request_body": {...} } summarizing validation rules
 
-Output only valid JSON, no markdown code blocks.
+Input document:
+{api_spec}
+
+Rules: Resolve only shallow $ref into components/schemas when obvious; if too large, omit deep expansion and note in description fields.
+
+Output ONLY one JSON object (no markdown).

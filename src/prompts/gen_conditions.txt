@@ -1,66 +1,42 @@
-Generate comprehensive test conditions for the given API endpoint using Equivalence Partitioning (EP) and Boundary Value Analysis (BVA).
+You are a test designer. Generate test conditions for ONE API endpoint using Equivalence Partitioning (EP) and Boundary Value Analysis (BVA).
 
-Endpoint Specification: ENDPOINT_PLACEHOLDER
+Endpoint specification (JSON):
+ENDPOINT_PLACEHOLDER
 
-CRITICAL REQUIREMENTS:
-1. Analyze ALL parameters from the endpoint specification above
-2. Generate conditions ONLY for parameters that exist in the specification
-3. Use the EXACT parameter names from the specification
-4. Create conditions for path parameters, query parameters, and request body fields
-5. For path parameters, use parameter name WITHOUT braces (e.g., petId not {petId})
+RULES
+1. Use ONLY parameters that appear in the specification: path / query / header parameters and request body property names (top-level keys under requestBody.properties).
+2. Use EXACT parameter names. For path template variables use the name without braces (e.g. petId, not {petId}).
+3. Prefer focused conditions: aim for roughly 3–8 conditions per parameter unless the spec is very rich (then at most 12 per parameter).
+4. For nested objects or arrays in the body: either (a) add conditions on primitive leaf fields that appear under properties, or (b) one condition on the root field with a minimal valid JSON-compatible object as a single string value ONLY if the prompt format below cannot represent it—otherwise skip exotic shapes.
 
-Generate conditions as a JSON array with the following structure:
-[
-  {
-    "id": "unique_condition_id",
-    "parameter": "exact_parameter_name_from_spec",
-    "partition_type": "valid|invalid|boundary",
-    "description": "clear description of what this condition tests",
-    "values": [list of SIMPLE test values - strings, numbers, or null only]
-  }
-]
+OUTPUT FORMAT
+Return a single JSON object with one key "conditions" whose value is an array of objects:
+{
+  "conditions": [
+    {
+      "id": "unique_snake_case_id",
+      "parameter": "exact_name_from_spec",
+      "partition_type": "valid|invalid|boundary",
+      "description": "what this condition exercises",
+      "values": [ ... ]
+    }
+  ]
+}
 
-IMPORTANT: Each value in the "values" array must be a SIMPLE TYPE:
-- Strings: "valid_value", "invalid_value", ""
-- Numbers: 1, 0, -1, 100, etc.
-- Null: null
-- DO NOT use arrays like [1,2,3] or objects like {"key": "value"} as single values
-- If you need multiple test values, put them as separate items in the values array
-- NEVER create conditions with null or empty string values - these are invalid
-- If a parameter is required, do NOT test for null/missing - that's handled by the API framework
+VALUES ARRAY
+- Each element must be a simple scalar: string, number, boolean, or null where null means “explicit null JSON value” for optional nullable fields ONLY if the spec marks the field as nullable.
+- Do NOT put arrays or objects as elements inside "values". If you need several scalars, list them as separate array elements.
+- Do NOT use empty string "" as the only value for a condition.
+- For “missing optional parameter” or “missing optional body field”, do NOT encode as null in values; the scenario stage will handle omission. Here only model explicit values.
 
-VALID CONDITION EXAMPLES:
-- parameter: "limit", values: [1, 50, 100]
-- parameter: "status", values: ["available", "pending", "sold"]
-- parameter: "petId", values: [1, 999, 0]
+PARTITIONS
+- valid: typical valid class, in-range values, valid enums.
+- invalid: wrong type, out of range, illegal enum, malformed semantics where obvious from spec.
+- boundary: min, max, min-1, max+1 for bounded numerics; minLength/maxLength±1 for strings when given.
 
-INVALID CONDITION EXAMPLES (DO NOT GENERATE):
-- values: [null] or ["", null] - empty values are invalid
-- parameter: "request_body" - not a real parameter name
-- parameter: "no_parameters" - not a real parameter
+ID NAMING
+- valid:   {param}_valid_{n}
+- invalid: {param}_invalid_{n} or {param}_invalid_type_{hint}
+- boundary:{param}_boundary_{n}
 
-CONDITION TYPES TO INCLUDE:
-1. Valid equivalence classes:
-   - Typical valid values for the parameter type
-   - Valid enum values (if applicable)
-   - Values within specified ranges
-   - For integers: minimum, maximum, and values in between
-
-2. Invalid equivalence classes:
-   - Wrong data types (string "abc" for integer parameter)
-   - Out-of-range values (below minimum, above maximum)
-   - Invalid enum values (e.g., "invalid_status")
-
-3. Boundary values:
-   - Minimum value (if parameter has minimum constraint)
-   - Maximum value (if parameter has maximum constraint)
-   - Minimum - 1 (if applicable for integers)
-   - Maximum + 1 (if applicable for integers)
-
-NAMING CONVENTION for IDs:
-- Valid: {param_name}_valid_{number}
-- Invalid: {param_name}_invalid_{number}
-- Boundary: {param_name}_boundary_{number}
-- Type errors: {param_name}_invalid_type_{type}
-
-Output ONLY a valid JSON array, no markdown code blocks or explanations.
+Output ONLY one JSON object (no markdown fences, no commentary).

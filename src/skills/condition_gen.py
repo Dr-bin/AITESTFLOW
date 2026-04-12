@@ -61,9 +61,8 @@ def _parse_conditions_response(data: Union[dict, list]) -> List[EPCondition]:
                 if 'values' in item and isinstance(item['values'], list):
                     normalized_values = []
                     for v in item['values']:
-                        if v is not None:
-                            normalized_values.append(_normalize_value(v))
-                    
+                        normalized_values.append(_normalize_value(v))
+
                     item['values'] = normalized_values
                 
                 if not item.get('values') or len(item.get('values', [])) == 0:

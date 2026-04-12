@@ -12,7 +12,6 @@ import tempfile
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
 
 from src.models import CoverageState, TestCase
 
@@ -33,9 +32,10 @@ class TestResult:
 
 
 def run_mock_validation(
-    endpoint: str, 
-    test_code: str, 
-    state: CoverageState
+    endpoint: str,
+    test_code: str,
+    state: CoverageState,
+    test_case_index: Optional[Dict[str, List[str]]] = None,
 ) -> CoverageState:
     """
     Run validation for generated test code.
@@ -44,6 +44,7 @@ def run_mock_validation(
         endpoint: API endpoint path being tested
         test_code: Python test code to validate
         state: Current CoverageState
+        test_case_index: Map test_id -> covered_condition_ids for accurate failure attribution
 
     Returns:
         Updated CoverageState with test results
@@ -71,7 +72,9 @@ def run_mock_validation(
         logger.info(f"Test results: {result.passed} passed, {result.failed} failed")
 
         failed_condition_ids = _map_failures_to_conditions(
-            result.failed_tests, state.covered_condition_ids
+            result.failed_tests,
+            state.covered_condition_ids,
+            test_case_index=test_case_index or {},
         )
 
         all_covered = set(state.covered_condition_ids)
@@ -127,48 +130,56 @@ def run_mock_validation(
                         logger.warning(f"Failed to delete temp file after 3 attempts: {temp_path}")
 
 
+def _strip_make_request_definitions(code: str) -> str:
+    """Remove top-level make_request definitions so the validator stub takes effect."""
+    lines = code.splitlines(keepends=True)
+    out: List[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("def make_request"):
+            i += 1
+            while i < len(lines):
+                n = lines[i]
+                if n.strip() == "":
+                    i += 1
+                    continue
+                if not (n.startswith(" ") or n.startswith("\t")):
+                    break
+                i += 1
+            continue
+        out.append(line)
+        i += 1
+    return "".join(out)
+
+
 def _wrap_test_code(test_code: str, endpoint: str) -> str:
-    """Wrap test code with mock fixture and necessary imports"""
-    return f'''"""Auto-wrapped test code for endpoint: {endpoint}"""
+    """Prepend a make_request stub that honors expected_status (no real HTTP)."""
+    body = _strip_make_request_definitions(test_code)
+    header = f'''"""AITestFlow mock validation (endpoint: {endpoint})"""
 import pytest
-import requests
-from unittest.mock import patch, Mock, MagicMock
-from typing import Dict, Any, Optional
-
-BASE_URL = "http://localhost:8000"
+from typing import Any, Dict, Optional
+from unittest.mock import MagicMock
 
 
-@pytest.fixture
-def mock_api():
-    """Mock fixture for API responses"""
-    def _mock_response(status=200, json_data=None, text=""):
-        mock = Mock()
-        mock.status_code = status
-        mock.json.return_value = json_data or {{"success": True}}
-        mock.text = text
-        mock.headers = {{"Content-Type": "application/json"}}
-        return mock
-    
-    mock_instance = _mock_response()
-    
-    with patch('requests.get', return_value=mock_instance) as mock_get, \
-         patch('requests.post', return_value=mock_instance) as mock_post, \
-         patch('requests.put', return_value=mock_instance) as mock_put, \
-         patch('requests.delete', return_value=mock_instance) as mock_delete, \
-         patch('requests.patch', return_value=mock_instance) as mock_patch, \
-         patch('requests.request', return_value=mock_instance) as mock_request:
-        yield {{
-            'get': mock_get,
-            'post': mock_post,
-            'put': mock_put,
-            'delete': mock_delete,
-            'patch': mock_patch,
-            'request': mock_request
-        }}
+def make_request(
+    method: str,
+    endpoint: str,
+    params: Optional[Dict] = None,
+    data: Optional[Dict] = None,
+    headers: Optional[Dict] = None,
+    expected_status: int = 200,
+) -> Any:
+    m = MagicMock()
+    m.status_code = int(expected_status)
+    m.text = ""
+    m.json.return_value = {{}}
+    m.headers = {{"Content-Type": "application/json"}}
+    return m
 
 
-{test_code}
 '''
+    return header + body
 
 
 def _run_pytest(test_path: str) -> TestResult:
@@ -268,27 +279,33 @@ def _parse_pytest_output(output: str) -> TestResult:
 
 
 def _map_failures_to_conditions(
-    failed_tests: List[Dict[str, Any]], 
-    covered_ids: List[str]
+    failed_tests: List[Dict[str, Any]],
+    covered_ids: List[str],
+    test_case_index: Optional[Dict[str, List[str]]] = None,
 ) -> List[str]:
-    """Map failed tests to condition IDs
-    
-    Extracts condition IDs from failed test names.
-    Test names typically follow pattern: test_<condition_id> or contain condition_id.
-    """
-    condition_ids = []
-    
+    """Map failed tests to condition IDs using parametrize ids (test_id) when possible."""
+    condition_ids: List[str] = []
+    index = test_case_index or {}
+
     for ft in failed_tests:
         test_name = ft.get("test_name", "")
         logger.warning(f"Test failed: {test_name} - {ft.get('error', 'Unknown error')}")
-        
+
+        bracket = re.search(r"\[([^\]]+)\]", test_name)
+        if bracket:
+            tid = bracket.group(1).strip()
+            if tid in index:
+                condition_ids.extend(index[tid])
+                logger.debug("Mapped failure %s to conditions via test_id %s", test_name, tid)
+                continue
+
         for cond_id in covered_ids:
             if cond_id in test_name or test_name in cond_id:
                 condition_ids.append(cond_id)
                 logger.debug(f"Mapped failed test '{test_name}' to condition '{cond_id}'")
                 break
-    
-    return condition_ids
+
+    return list(dict.fromkeys(condition_ids))
 
 
 def log_validation(
