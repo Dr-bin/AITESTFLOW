@@ -37,12 +37,20 @@ def main() -> None:
     )
     code, coverage = coordinator.run_full_pipeline(spec)
     out_dir = ROOT / "output"
+    vsum = sum(
+        row["validated_covered_count"] for row in coordinator._per_endpoint_coverage
+    )
     print("Done.")
-    print(f"  coverage_rate: {coverage.coverage_rate:.4f}")
-    print(f"  total_conditions: {coverage.total_conditions}")
-    print(f"  covered ids: {len(coverage.covered_condition_ids)}")
+    print(f"  coverage_rate (validated, weighted): {coverage.coverage_rate:.4f}")
+    print(f"  total_conditions (sum per endpoint): {coverage.total_conditions}")
+    print(f"  validated_covered_count (sum per endpoint): {vsum}")
+    print(f"  distinct covered ids (global union): {len(coverage.covered_condition_ids)}")
+    print(f"  endpoints: {len(coordinator._per_endpoint_coverage)}")
     print(f"  generated lines: {len(code.splitlines())}")
-    print(f"  written: {out_dir / 'test_api.py'}, {out_dir / 'coverage_report.json'}")
+    print(
+        f"  written: {out_dir / 'test_api.py'}, {out_dir / 'coverage_report.json'}, "
+        f"{out_dir / 'design_report.md'}"
+    )
 
 
 if __name__ == "__main__":

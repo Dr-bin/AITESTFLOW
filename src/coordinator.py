@@ -22,6 +22,7 @@ from src.skills import (
     condition_gen,
     scenario_gen,
 )
+from src.design_report import write_design_report
 from src.validator import run_mock_validation
 
 
@@ -54,6 +55,7 @@ class WorkflowCoordinator:
         self._workflow_log: List[str] = []
         self._global_coverage: Optional[CoverageState] = None
         self._all_conditions: Dict[str, List[EPCondition]] = {}
+        self._per_endpoint_coverage: List[Dict[str, Any]] = []
 
     def run_full_pipeline(self, openapi_spec: dict) -> Tuple[str, CoverageState]:
         """
@@ -72,23 +74,35 @@ class WorkflowCoordinator:
         self._log(f"Parsed {len(endpoints)} endpoints")
 
         all_test_code_parts: List[str] = []
-        all_covered_ids: List[str] = []
-        total_conditions = 0
+        design_runs: List[Dict[str, Any]] = []
+        endpoint_snapshots: List[Dict[str, Any]] = []
+        self._per_endpoint_coverage = []
 
         for idx, endpoint_meta in enumerate(endpoints, 1):
             self._log("-" * 40)
             self._log(f"[{idx}/{len(endpoints)}] Processing: {endpoint_meta['method']} {endpoint_meta['path']}")
             
             try:
-                test_code, coverage, conditions = self._process_endpoint(endpoint_meta)
+                test_code, coverage, conditions, test_cases = self._process_endpoint(endpoint_meta)
                 
                 self._all_conditions[endpoint_meta['path']] = conditions
                 all_test_code_parts.append(test_code)
-                
-                condition_ids = [c.id for c in conditions]
-                all_covered_ids.extend(condition_ids)
-                total_conditions += len(conditions)
-                
+                design_runs.append(
+                    {
+                        "method": endpoint_meta.get("method", ""),
+                        "path": endpoint_meta.get("path", ""),
+                        "conditions": conditions,
+                        "test_cases": test_cases,
+                    }
+                )
+                endpoint_snapshots.append(
+                    {
+                        "method": endpoint_meta.get("method", ""),
+                        "path": endpoint_meta.get("path", ""),
+                        "state": coverage,
+                    }
+                )
+
                 self._log("[OK] Endpoint processed successfully")
                 
             except Exception as e:
@@ -98,32 +112,79 @@ class WorkflowCoordinator:
         final_test_code = self._merge_test_code(all_test_code_parts)
         
         self._write_output(final_test_code, "test_api.py")
-        
-        valid_covered_ids = self._filter_valid_condition_ids(all_covered_ids)
-        unique_covered_ids = list(set(valid_covered_ids))
-        coverage_rate = len(unique_covered_ids) / total_conditions if total_conditions > 0 else 0.0
-        
-        self._global_coverage = CoverageState(
-            total_conditions=total_conditions,
-            covered_condition_ids=unique_covered_ids,
-            failed_test_cases=[],
-            iteration=self._max_iter,
-            coverage_rate=min(1.0, coverage_rate),
-        )
+
+        if design_runs:
+            dr_path = write_design_report(self._output_dir, design_runs)
+            self._log(f"Written: {dr_path}")
+
+        if not endpoint_snapshots:
+            self._global_coverage = CoverageState(
+                total_conditions=0,
+                covered_condition_ids=[],
+                failed_test_cases=[],
+                iteration=self._max_iter,
+                coverage_rate=0.0,
+            )
+        else:
+            weighted_total = sum(s["state"].total_conditions for s in endpoint_snapshots)
+            weighted_covered = sum(
+                len(s["state"].covered_condition_ids) for s in endpoint_snapshots
+            )
+            coverage_rate = (
+                weighted_covered / weighted_total if weighted_total > 0 else 0.0
+            )
+            all_failed: List[Dict[str, Any]] = []
+            for s in endpoint_snapshots:
+                all_failed.extend(s["state"].failed_test_cases)
+            flat_covered: List[str] = []
+            for s in endpoint_snapshots:
+                flat_covered.extend(s["state"].covered_condition_ids)
+            unique_covered = sorted(
+                set(self._filter_valid_condition_ids(flat_covered))
+            )
+            for s in endpoint_snapshots:
+                st = s["state"]
+                self._per_endpoint_coverage.append(
+                    {
+                        "method": s["method"],
+                        "path": s["path"],
+                        "total_conditions": st.total_conditions,
+                        "validated_covered_count": len(st.covered_condition_ids),
+                        "coverage_rate": round(st.coverage_rate, 6),
+                        "covered_condition_ids": sorted(st.covered_condition_ids),
+                    }
+                )
+            self._global_coverage = CoverageState(
+                total_conditions=weighted_total,
+                covered_condition_ids=unique_covered,
+                failed_test_cases=all_failed,
+                iteration=self._max_iter,
+                coverage_rate=min(1.0, coverage_rate),
+            )
 
         self._write_coverage_report()
         self._write_workflow_log()
 
         self._log("=" * 60)
-        self._log(f"Pipeline complete. Final coverage: {self._global_coverage.coverage_rate:.2%}")
-        self._log(f"Total conditions: {total_conditions}, Covered: {len(unique_covered_ids)}")
+        gc = self._global_coverage
+        assert gc is not None
+        vcount = sum(
+            p["validated_covered_count"] for p in self._per_endpoint_coverage
+        ) if self._per_endpoint_coverage else 0
+        self._log(
+            f"Pipeline complete. Validated coverage (mock pytest): {gc.coverage_rate:.2%}"
+        )
+        self._log(
+            f"Total conditions (sum per endpoint): {gc.total_conditions}, "
+            f"Validated covered (sum per endpoint): {vcount}"
+        )
 
         return final_test_code, self._global_coverage
 
     def _process_endpoint(
         self, endpoint_meta: dict
-    ) -> Tuple[str, CoverageState, List[EPCondition]]:
-        """Process a single endpoint with feedback loop"""
+    ) -> Tuple[str, CoverageState, List[EPCondition], List[TestCase]]:
+        """Process a single endpoint with feedback loop."""
         
         conditions = condition_gen.generate_conditions(endpoint_meta)
         self._log(f"Generated {len(conditions)} conditions")
@@ -195,7 +256,7 @@ class WorkflowCoordinator:
             current_code = best_code
             self._log(f"Restored best coverage: {best_coverage:.2%}")
 
-        return current_code, state, conditions
+        return current_code, state, conditions, test_cases
 
     def _generate_supplementary_code(
         self, gap_prompt: str, existing_code: str
@@ -338,14 +399,25 @@ def make_request(
         if not self._global_coverage:
             return
 
+        validated_sum = sum(
+            row["validated_covered_count"] for row in self._per_endpoint_coverage
+        )
         report = {
             "timestamp": datetime.now().isoformat(),
+            "coverage_definition": (
+                "Weighted mock-validation coverage after pytest per endpoint: "
+                "sum(validated_covered_count_i) / sum(total_conditions_i). "
+                "Each endpoint's counts come from the last validation state "
+                "(condition IDs removed when mapped tests fail)."
+            ),
             "total_conditions": self._global_coverage.total_conditions,
-            "covered_condition_ids": self._global_coverage.covered_condition_ids,
+            "validated_covered_count": validated_sum,
             "coverage_rate": self._global_coverage.coverage_rate,
+            "covered_condition_ids": self._global_coverage.covered_condition_ids,
+            "per_endpoint_coverage": self._per_endpoint_coverage,
             "failed_test_cases": self._global_coverage.failed_test_cases,
             "iteration": self._global_coverage.iteration,
-            "endpoints_processed": len(self._all_conditions),
+            "endpoints_processed": len(self._per_endpoint_coverage),
         }
 
         self._write_output(json.dumps(report, indent=2), "coverage_report.json")

@@ -200,6 +200,8 @@ def _run_pytest(test_path: str) -> TestResult:
             [pytest_cmd, test_path, "--tb=short", "-v", "--no-header"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=60,
         )
 

@@ -1,81 +1,106 @@
-[2026-04-12 21:39:51] ============================================================
-[2026-04-12 21:39:51] Starting full pipeline
-[2026-04-12 21:39:51] Parsed 5 endpoints
-[2026-04-12 21:39:51] ----------------------------------------
-[2026-04-12 21:39:51] [1/5] Processing: GET /pets
-[2026-04-12 21:40:17] Generated 19 conditions
-[2026-04-12 21:40:45] Generated 13 test cases
-[2026-04-12 21:41:27] --- Iteration 1/2 ---
-[2026-04-12 21:41:35] Coverage: 100.00%
-[2026-04-12 21:41:35] Uncovered conditions: 0
-[2026-04-12 21:41:35] Failed tests: 0
-[2026-04-12 21:41:35] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:41:35] --- Iteration 2/2 ---
-[2026-04-12 21:41:43] Coverage: 100.00%
-[2026-04-12 21:41:43] Uncovered conditions: 0
-[2026-04-12 21:41:43] Failed tests: 0
-[2026-04-12 21:41:43] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:41:43] [OK] Endpoint processed successfully
-[2026-04-12 21:41:43] ----------------------------------------
-[2026-04-12 21:41:43] [2/5] Processing: POST /pets
-[2026-04-12 21:42:19] Generated 21 conditions
-[2026-04-12 21:43:04] Generated 13 test cases
-[2026-04-12 21:44:19] --- Iteration 1/2 ---
-[2026-04-12 21:44:28] Coverage: 100.00%
-[2026-04-12 21:44:28] Uncovered conditions: 0
-[2026-04-12 21:44:28] Failed tests: 0
-[2026-04-12 21:44:28] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:44:28] --- Iteration 2/2 ---
-[2026-04-12 21:44:36] Coverage: 100.00%
-[2026-04-12 21:44:36] Uncovered conditions: 0
-[2026-04-12 21:44:36] Failed tests: 0
-[2026-04-12 21:44:36] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:44:36] [OK] Endpoint processed successfully
-[2026-04-12 21:44:36] ----------------------------------------
-[2026-04-12 21:44:36] [3/5] Processing: GET /pets/{petId}
-[2026-04-12 21:44:53] Generated 9 conditions
-[2026-04-12 21:45:12] Generated 8 test cases
-[2026-04-12 21:45:51] --- Iteration 1/2 ---
-[2026-04-12 21:45:59] Coverage: 100.00%
-[2026-04-12 21:45:59] Uncovered conditions: 0
-[2026-04-12 21:45:59] Failed tests: 0
-[2026-04-12 21:45:59] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:45:59] --- Iteration 2/2 ---
-[2026-04-12 21:46:06] Coverage: 100.00%
-[2026-04-12 21:46:06] Uncovered conditions: 0
-[2026-04-12 21:46:06] Failed tests: 0
-[2026-04-12 21:46:06] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:46:06] [OK] Endpoint processed successfully
-[2026-04-12 21:46:06] ----------------------------------------
-[2026-04-12 21:46:06] [4/5] Processing: DELETE /pets/{petId}
-[2026-04-12 21:46:21] Generated 8 conditions
-[2026-04-12 21:46:40] Generated 7 test cases
-[2026-04-12 21:47:15] --- Iteration 1/2 ---
-[2026-04-12 21:47:25] Coverage: 100.00%
-[2026-04-12 21:47:25] Uncovered conditions: 0
-[2026-04-12 21:47:25] Failed tests: 0
-[2026-04-12 21:47:25] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:47:25] --- Iteration 2/2 ---
-[2026-04-12 21:47:33] Coverage: 100.00%
-[2026-04-12 21:47:33] Uncovered conditions: 0
-[2026-04-12 21:47:33] Failed tests: 0
-[2026-04-12 21:47:33] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:47:33] [OK] Endpoint processed successfully
-[2026-04-12 21:47:33] ----------------------------------------
-[2026-04-12 21:47:33] [5/5] Processing: POST /pets/{petId}/vaccinations
-[2026-04-12 21:48:32] Generated 14 conditions
-[2026-04-12 21:49:09] Generated 10 test cases
-[2026-04-12 21:50:09] --- Iteration 1/2 ---
-[2026-04-12 21:50:37] Coverage: 100.00%
-[2026-04-12 21:50:37] Uncovered conditions: 0
-[2026-04-12 21:50:37] Failed tests: 0
-[2026-04-12 21:50:37] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:50:37] --- Iteration 2/2 ---
-[2026-04-12 21:51:03] Coverage: 100.00%
-[2026-04-12 21:51:03] Uncovered conditions: 0
-[2026-04-12 21:51:03] Failed tests: 0
-[2026-04-12 21:51:03] All conditions covered, continuing to next iteration to maximize coverage
-[2026-04-12 21:51:03] [OK] Endpoint processed successfully
-[2026-04-12 21:51:03] Written: E:\study\软测\AITESTFLOW\output\test_api.py
-[2026-04-12 21:51:03] Written: E:\study\软测\AITESTFLOW\output\design_report.md
-[2026-04-12 21:51:03] Written: E:\study\软测\AITESTFLOW\output\coverage_report.json
+[2026-04-12 23:00:47] ============================================================
+[2026-04-12 23:00:47] Starting full pipeline
+[2026-04-12 23:00:47] Parsed 5 endpoints
+[2026-04-12 23:00:47] ----------------------------------------
+[2026-04-12 23:00:47] [1/5] Processing: GET /pets
+[2026-04-12 23:01:09] Generated 13 conditions
+[2026-04-12 23:01:33] Generated 10 test cases
+[2026-04-12 23:02:15] --- Iteration 1/3 ---
+[2026-04-12 23:02:22] Coverage: 100.00%
+[2026-04-12 23:02:22] Uncovered conditions: 0
+[2026-04-12 23:02:22] Failed tests: 0
+[2026-04-12 23:02:22] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:02:22] --- Iteration 2/3 ---
+[2026-04-12 23:02:28] Coverage: 100.00%
+[2026-04-12 23:02:28] Uncovered conditions: 0
+[2026-04-12 23:02:28] Failed tests: 0
+[2026-04-12 23:02:28] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:02:28] --- Iteration 3/3 ---
+[2026-04-12 23:02:34] Coverage: 100.00%
+[2026-04-12 23:02:34] Uncovered conditions: 0
+[2026-04-12 23:02:34] Failed tests: 0
+[2026-04-12 23:02:34] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:02:34] [OK] Endpoint processed successfully
+[2026-04-12 23:02:34] ----------------------------------------
+[2026-04-12 23:02:34] [2/5] Processing: POST /pets
+[2026-04-12 23:03:05] Generated 23 conditions
+[2026-04-12 23:03:39] Generated 12 test cases
+[2026-04-12 23:04:40] --- Iteration 1/3 ---
+[2026-04-12 23:04:46] Coverage: 100.00%
+[2026-04-12 23:04:46] Uncovered conditions: 0
+[2026-04-12 23:04:46] Failed tests: 0
+[2026-04-12 23:04:46] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:04:46] --- Iteration 2/3 ---
+[2026-04-12 23:04:52] Coverage: 100.00%
+[2026-04-12 23:04:52] Uncovered conditions: 0
+[2026-04-12 23:04:52] Failed tests: 0
+[2026-04-12 23:04:52] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:04:52] --- Iteration 3/3 ---
+[2026-04-12 23:04:58] Coverage: 100.00%
+[2026-04-12 23:04:58] Uncovered conditions: 0
+[2026-04-12 23:04:58] Failed tests: 0
+[2026-04-12 23:04:58] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:04:58] [OK] Endpoint processed successfully
+[2026-04-12 23:04:58] ----------------------------------------
+[2026-04-12 23:04:58] [3/5] Processing: GET /pets/{petId}
+[2026-04-12 23:05:13] Generated 8 conditions
+[2026-04-12 23:05:31] Generated 7 test cases
+[2026-04-12 23:06:06] --- Iteration 1/3 ---
+[2026-04-12 23:06:12] Coverage: 100.00%
+[2026-04-12 23:06:12] Uncovered conditions: 0
+[2026-04-12 23:06:12] Failed tests: 0
+[2026-04-12 23:06:12] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:06:12] --- Iteration 2/3 ---
+[2026-04-12 23:06:18] Coverage: 100.00%
+[2026-04-12 23:06:18] Uncovered conditions: 0
+[2026-04-12 23:06:18] Failed tests: 0
+[2026-04-12 23:06:18] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:06:18] --- Iteration 3/3 ---
+[2026-04-12 23:06:25] Coverage: 100.00%
+[2026-04-12 23:06:25] Uncovered conditions: 0
+[2026-04-12 23:06:25] Failed tests: 0
+[2026-04-12 23:06:25] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:06:25] [OK] Endpoint processed successfully
+[2026-04-12 23:06:25] ----------------------------------------
+[2026-04-12 23:06:25] [4/5] Processing: DELETE /pets/{petId}
+[2026-04-12 23:06:42] Generated 8 conditions
+[2026-04-12 23:07:02] Generated 8 test cases
+[2026-04-12 23:07:42] --- Iteration 1/3 ---
+[2026-04-12 23:07:49] Coverage: 100.00%
+[2026-04-12 23:07:49] Uncovered conditions: 0
+[2026-04-12 23:07:49] Failed tests: 0
+[2026-04-12 23:07:49] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:07:49] --- Iteration 2/3 ---
+[2026-04-12 23:07:55] Coverage: 100.00%
+[2026-04-12 23:07:55] Uncovered conditions: 0
+[2026-04-12 23:07:55] Failed tests: 0
+[2026-04-12 23:07:55] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:07:55] --- Iteration 3/3 ---
+[2026-04-12 23:08:01] Coverage: 100.00%
+[2026-04-12 23:08:01] Uncovered conditions: 0
+[2026-04-12 23:08:01] Failed tests: 0
+[2026-04-12 23:08:01] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:08:01] [OK] Endpoint processed successfully
+[2026-04-12 23:08:01] ----------------------------------------
+[2026-04-12 23:08:01] [5/5] Processing: POST /pets/{petId}/vaccinations
+[2026-04-12 23:08:31] Generated 15 conditions
+[2026-04-12 23:09:05] Generated 10 test cases
+[2026-04-12 23:10:02] --- Iteration 1/3 ---
+[2026-04-12 23:10:08] Coverage: 100.00%
+[2026-04-12 23:10:08] Uncovered conditions: 0
+[2026-04-12 23:10:08] Failed tests: 0
+[2026-04-12 23:10:08] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:10:08] --- Iteration 2/3 ---
+[2026-04-12 23:10:14] Coverage: 100.00%
+[2026-04-12 23:10:14] Uncovered conditions: 0
+[2026-04-12 23:10:14] Failed tests: 0
+[2026-04-12 23:10:14] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:10:14] --- Iteration 3/3 ---
+[2026-04-12 23:10:21] Coverage: 100.00%
+[2026-04-12 23:10:21] Uncovered conditions: 0
+[2026-04-12 23:10:21] Failed tests: 0
+[2026-04-12 23:10:21] All conditions covered, continuing to next iteration to maximize coverage
+[2026-04-12 23:10:21] [OK] Endpoint processed successfully
+[2026-04-12 23:10:21] Written: output\test_api.py
+[2026-04-12 23:10:21] Written: output\design_report.md
+[2026-04-12 23:10:21] Written: output\coverage_report.json

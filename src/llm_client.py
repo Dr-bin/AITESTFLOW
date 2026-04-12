@@ -7,6 +7,7 @@ import time
 from typing import TypeVar
 
 from dotenv import load_dotenv
+import httpx
 from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 from pydantic import BaseModel, ValidationError
 
@@ -49,13 +50,29 @@ class LLMClient:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             logger.warning("OPENAI_API_KEY not found in environment variables")
-        
-        self._client = OpenAI(
-            api_key=api_key,
-            base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"),
-            http_client=None,
-            timeout=120.0,
-        )
+
+        base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+        try:
+            self._client = OpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                http_client=None,
+                timeout=120.0,
+            )
+        except TypeError as e:
+            # openai<=1.14 with newer httpx may fail in internal client init
+            if "proxies" not in str(e):
+                raise
+            logger.warning(
+                "OpenAI client init hit httpx compatibility issue; fallback to explicit httpx client: %s",
+                e,
+            )
+            self._client = OpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                http_client=httpx.Client(timeout=120.0),
+                timeout=120.0,
+            )
         self._model = os.getenv("LLM_MODEL", "gpt-4")
         logger.info(f"LLM Client initialized with model: {self._model}")
 
