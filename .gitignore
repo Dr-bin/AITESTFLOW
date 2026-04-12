@@ -1,0 +1,27 @@
+# 通用敏感文件
+.env
+.env.local
+.env.*.local
+*.env
+secrets/
+config/private/
+
+# 包含敏感信息的配置文件
+config.yaml
+config.json
+secrets.json
+credentials.json
+*.key
+*.pem
+*.cert
+
+# 开发环境文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 运行时文件
+node_modules/
+__pycache__/
+*.pyc

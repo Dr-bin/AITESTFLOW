@@ -1,0 +1,22 @@
+Extract API endpoint information from the following OpenAPI/Swagger specification.
+
+Input: {api_spec}
+
+Extract and return a JSON list with the following structure for each endpoint:
+[
+  {
+    "path": "endpoint path",
+    "method": "HTTP method (GET/POST/PUT/DELETE/PATCH)",
+    "parameters": [
+      {
+        "name": "parameter name",
+        "type": "parameter type (string/integer/boolean/array/object)",
+        "required": true/false,
+        "constraints": "any constraints or validation rules",
+        "description": "parameter description"
+      }
+    ]
+  }
+]
+
+Output only valid JSON, no markdown code blocks.

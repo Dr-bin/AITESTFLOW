@@ -1,0 +1,81 @@
+Generate clean, executable pytest test code from the test scenarios.
+
+Test Scenarios: SCENARIOS_PLACEHOLDER
+Base URL: BASE_URL_PLACEHOLDER
+
+CRITICAL REQUIREMENTS:
+1. Use the EXACT endpoint paths from the scenarios (do not modify them)
+2. Generate code ONLY for the provided test scenarios
+3. DO NOT include placeholder comments or example code
+4. DO NOT duplicate imports or constants
+5. Generate a SINGLE cohesive test module
+
+Generate Python pytest code with the following structure:
+
+```python
+"""Auto-generated API tests using pytest"""
+import pytest
+import requests
+from typing import Dict, Any
+
+BASE_URL = "BASE_URL_FROM_ABOVE"
+
+
+def make_request(method: str, endpoint: str, params: Dict = None, data: Dict = None) -> requests.Response:
+    """Helper function to make HTTP requests"""
+    url = f"{BASE_URL}{endpoint}"
+    
+    try:
+        if method == "GET":
+            return requests.get(url, params=params, timeout=10)
+        elif method == "POST":
+            return requests.post(url, json=data, params=params, timeout=10)
+        elif method == "PUT":
+            return requests.put(url, json=data, params=params, timeout=10)
+        elif method == "DELETE":
+            return requests.delete(url, params=params, timeout=10)
+        elif method == "PATCH":
+            return requests.patch(url, json=data, params=params, timeout=10)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+    except requests.exceptions.RequestException as e:
+        pytest.fail(f"Request failed: {str(e)}")
+
+
+# Test data
+test_scenarios = [
+    # Include all scenarios from SCENARIOS_PLACEHOLDER
+]
+
+
+@pytest.mark.parametrize("scenario", test_scenarios)
+def test_api_endpoint(scenario):
+    """Parameterized test for API endpoints"""
+    response = make_request(
+        method=scenario["method"],
+        endpoint=scenario["endpoint"],
+        params=scenario.get("params", {}),
+        data=scenario.get("payload", {})
+    )
+    
+    # Assert status code
+    assert response.status_code == scenario["expected_status"], \
+        f"Expected {scenario['expected_status']}, got {response.status_code}. Response: {response.text}"
+    
+    # Validate response for non-204 status codes
+    if scenario["expected_status"] not in [204]:
+        try:
+            response.json()
+        except ValueError:
+            pytest.fail("Response is not valid JSON")
+```
+
+CODE QUALITY REQUIREMENTS:
+- Include type hints for better code clarity
+- Add docstrings for functions
+- Use meaningful variable names
+- Include proper error handling
+- Add timeout to all requests
+- Include response text in assertion messages for debugging
+
+Output ONLY valid Python code, no markdown code blocks or explanations.

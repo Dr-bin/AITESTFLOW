@@ -1,0 +1,66 @@
+Generate comprehensive test conditions for the given API endpoint using Equivalence Partitioning (EP) and Boundary Value Analysis (BVA).
+
+Endpoint Specification: ENDPOINT_PLACEHOLDER
+
+CRITICAL REQUIREMENTS:
+1. Analyze ALL parameters from the endpoint specification above
+2. Generate conditions ONLY for parameters that exist in the specification
+3. Use the EXACT parameter names from the specification
+4. Create conditions for path parameters, query parameters, and request body fields
+5. For path parameters, use parameter name WITHOUT braces (e.g., petId not {petId})
+
+Generate conditions as a JSON array with the following structure:
+[
+  {
+    "id": "unique_condition_id",
+    "parameter": "exact_parameter_name_from_spec",
+    "partition_type": "valid|invalid|boundary",
+    "description": "clear description of what this condition tests",
+    "values": [list of SIMPLE test values - strings, numbers, or null only]
+  }
+]
+
+IMPORTANT: Each value in the "values" array must be a SIMPLE TYPE:
+- Strings: "valid_value", "invalid_value", ""
+- Numbers: 1, 0, -1, 100, etc.
+- Null: null
+- DO NOT use arrays like [1,2,3] or objects like {"key": "value"} as single values
+- If you need multiple test values, put them as separate items in the values array
+- NEVER create conditions with null or empty string values - these are invalid
+- If a parameter is required, do NOT test for null/missing - that's handled by the API framework
+
+VALID CONDITION EXAMPLES:
+- parameter: "limit", values: [1, 50, 100]
+- parameter: "status", values: ["available", "pending", "sold"]
+- parameter: "petId", values: [1, 999, 0]
+
+INVALID CONDITION EXAMPLES (DO NOT GENERATE):
+- values: [null] or ["", null] - empty values are invalid
+- parameter: "request_body" - not a real parameter name
+- parameter: "no_parameters" - not a real parameter
+
+CONDITION TYPES TO INCLUDE:
+1. Valid equivalence classes:
+   - Typical valid values for the parameter type
+   - Valid enum values (if applicable)
+   - Values within specified ranges
+   - For integers: minimum, maximum, and values in between
+
+2. Invalid equivalence classes:
+   - Wrong data types (string "abc" for integer parameter)
+   - Out-of-range values (below minimum, above maximum)
+   - Invalid enum values (e.g., "invalid_status")
+
+3. Boundary values:
+   - Minimum value (if parameter has minimum constraint)
+   - Maximum value (if parameter has maximum constraint)
+   - Minimum - 1 (if applicable for integers)
+   - Maximum + 1 (if applicable for integers)
+
+NAMING CONVENTION for IDs:
+- Valid: {param_name}_valid_{number}
+- Invalid: {param_name}_invalid_{number}
+- Boundary: {param_name}_boundary_{number}
+- Type errors: {param_name}_invalid_type_{type}
+
+Output ONLY a valid JSON array, no markdown code blocks or explanations.
