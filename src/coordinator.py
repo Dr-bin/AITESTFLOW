@@ -89,10 +89,10 @@ class WorkflowCoordinator:
                 all_covered_ids.extend(condition_ids)
                 total_conditions += len(conditions)
                 
-                self._log(f"✓ Endpoint processed successfully")
+                self._log("[OK] Endpoint processed successfully")
                 
             except Exception as e:
-                self._log(f"✗ ERROR processing endpoint: {e}")
+                self._log(f"[FAIL] ERROR processing endpoint: {e}")
                 logger.error(f"Failed to process endpoint {endpoint_meta['path']}: {e}", exc_info=True)
 
         final_test_code = self._merge_test_code(all_test_code_parts)
