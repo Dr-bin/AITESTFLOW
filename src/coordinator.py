@@ -359,17 +359,16 @@ def make_request(
 '''
 
         merged_functions = []
-        seen_imports = set()
-        seen_consts = set()
         
-        for code in code_parts:
+        for idx, code in enumerate(code_parts, 1):
             code = self._clean_code_section(code)
+            code = self._strip_top_level_function_definitions(code, {"make_request"})
+            code = self._namespace_test_symbols(code, idx)
             
             code = re.sub(r'^import pytest\s*$', '', code, flags=re.MULTILINE)
             code = re.sub(r'^import requests\s*$', '', code, flags=re.MULTILINE)
             code = re.sub(r'^from typing import.*$', '', code, flags=re.MULTILINE)
             code = re.sub(r'^BASE_URL\s*=.*$', '', code, flags=re.MULTILINE)
-            code = re.sub(r'^def make_request.*?(?=\n(?:def |class |@pytest))', '', code, flags=re.DOTALL)
             
             code = code.strip()
             
@@ -386,6 +385,38 @@ def make_request(
         """Strip leading module docstring only (do not dedupe lines — that breaks test data)."""
         code = re.sub(r'^"""[\s\S]*?"""', '', code, count=1)
         code = re.sub(r"^'''[\s\S]*?'''", '', code, count=1)
+        return code
+
+    def _strip_top_level_function_definitions(
+        self, code: str, function_names: set[str]
+    ) -> str:
+        """Remove top-level function defs by name from generated code snippets."""
+        lines = code.splitlines(keepends=True)
+        out: List[str] = []
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            m = re.match(r"^def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", line)
+            if m and m.group(1) in function_names:
+                i += 1
+                while i < len(lines):
+                    nxt = lines[i]
+                    if nxt.strip() == "":
+                        i += 1
+                        continue
+                    if not (nxt.startswith(" ") or nxt.startswith("\t")):
+                        break
+                    i += 1
+                continue
+            out.append(line)
+            i += 1
+        return "".join(out)
+
+    def _namespace_test_symbols(self, code: str, index: int) -> str:
+        """Rename module-level pytest symbols to avoid collisions across endpoint chunks."""
+        suffix = f"_{index}"
+        code = re.sub(r"\btest_scenarios\b", f"test_scenarios{suffix}", code)
+        code = re.sub(r"\btest_api_scenario\b", f"test_api_scenario{suffix}", code)
         return code
 
     def _write_output(self, content: str, filename: str) -> None:

@@ -10,12 +10,15 @@ OUTPUT
 Return a single JSON object: { "test_cases": [ ... ] }.
 Each test case MUST have:
 - "test_id": unique string (e.g. TC001, TC_NEG_001, TC_BVA_001)
-- "endpoint": MUST equal ENDPOINT_PLACEHOLDER except you MAY substitute path parameters with concrete values (e.g. /pets/5 for /pets/{petId})
+- "endpoint": MUST equal ENDPOINT_PLACEHOLDER except you MAY substitute path parameters with concrete values (e.g. /resources/123 for /resources/{id})
 - "method": MUST equal METHOD_PLACEHOLDER
 - "query": object — query-string parameters for this call (use {} if none)
 - "payload": object — JSON request body for POST/PUT/PATCH (use {} if none)
 - "expected_status": integer HTTP status you expect (200, 201, 204, 400, 404, 422, etc.)
 - "covered_condition_ids": array of condition ids from the input list that this test is meant to satisfy
+
+DOMAIN NEUTRALITY
+- Do not assume any business domain, entity name, or field beyond what appears in ENDPOINT_PLACEHOLDER and CONDITIONS_PLACEHOLDER.
 
 PARAMETER PLACEMENT (critical)
 - GET / HEAD / DELETE: put non-path parameters in "query" unless the spec says they are headers. "payload" should almost always be {}.

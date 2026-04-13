@@ -5,9 +5,10 @@ ENDPOINT_PLACEHOLDER
 
 RULES
 1. Use ONLY parameters that appear in the specification: path / query / header parameters and request body property names (top-level keys under requestBody.properties).
-2. Use EXACT parameter names. For path template variables use the name without braces (e.g. petId, not {petId}).
+2. Use EXACT parameter names. For path template variables use the name without braces (e.g. id, not {id}).
 3. Prefer focused conditions: aim for roughly 3–8 conditions per parameter unless the spec is very rich (then at most 12 per parameter).
 4. For nested objects or arrays in the body: either (a) add conditions on primitive leaf fields that appear under properties, or (b) one condition on the root field with a minimal valid JSON-compatible object as a single string value ONLY if the prompt format below cannot represent it—otherwise skip exotic shapes.
+5. Stay domain-neutral: do not invent business-specific nouns, enums, or semantics not present in ENDPOINT_PLACEHOLDER.
 
 OUTPUT FORMAT
 Return a single JSON object with one key "conditions" whose value is an array of objects:
