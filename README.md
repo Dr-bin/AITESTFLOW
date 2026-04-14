@@ -22,7 +22,6 @@ AITESTFLOW/
 ├── output/                         # 运行产物目录
 │   ├── test_api.py                 # 生成的 pytest 脚本
 │   ├── coverage_report.json        # mock 验证口径覆盖率
-│   ├── real_coverage_report.json   # 真实执行口径覆盖率（可选）
 │   ├── design_report.md            # 设计报告（EP/BVA + 样例用例）
 │   └── workflow_log.txt            # 工作流日志
 ├── docs/
@@ -48,8 +47,8 @@ AITESTFLOW/
 │       ├── code_gen.py
 │       └── evaluator.py
 ├── tools/
-│   ├── mock_petstore_server.py     # 本地模拟 API（用于真实执行验证）
-│   └── evaluate_real_coverage.py   # 真实覆盖率评估脚本
+│   ├── mock_petstore_server.py     # 本地模拟 API（仅用于验证测试可执行）
+│   └── petstore_分层覆盖对照表.md   # 人工对照覆盖统计表
 └── tests/
     └── test_integration.py
 ```
@@ -61,7 +60,7 @@ AITESTFLOW/
 3. 将条件组合为可执行场景（`test_cases`）。
 4. 生成 pytest 代码并合并为 `output/test_api.py`。
 5. 进行 mock 校验并输出 `coverage_report.json`。
-6. 可选：使用本地模拟 API 执行真实覆盖率评估，输出 `real_coverage_report.json`。
+6. 可选：启动本地模拟 API 验证 `output/test_api.py` 可执行，再基于 `tools/petstore_分层覆盖对照表.md` 人工统计真实覆盖率。
 
 ## 环境要求
 
@@ -137,22 +136,17 @@ print(coverage.coverage_rate)
 - `output/workflow_log.txt`  
   流程执行日志，包含每个端点处理与迭代记录。
 
-- `output/real_coverage_report.json`（可选）  
-  基于真实 HTTP 执行结果的覆盖率报告。
+- `tools/petstore_分层覆盖对照表.md`（推荐）  
+  基于真实 HTTP 执行结果的人工覆盖统计表（按输入/输出分层勾选并计算）。
 
-## 真实覆盖率评估（可选）
+## 真实覆盖率评估（人工对照，推荐）
 
 若需要执行真实请求验证（使用仓库内 mock API）：
 
-```bash
-python tools/evaluate_real_coverage.py
-```
-
-该脚本会：
-
-1. 启动本地模拟服务（`tools/mock_petstore_server.py`）
-2. 执行 `pytest output/test_api.py`
-3. 统计通过用例覆盖的条件并输出报告
+1. 启动本地模拟服务（`tools/mock_petstore_server.py`）。
+2. 执行 `python -m pytest output/test_api.py -v`。
+3. 将执行结果映射到 `tools/petstore_分层覆盖对照表.md` 勾选。
+4. 按“已勾选条目 / 总条目”手工计算覆盖率。
 
 ## 常用命令
 

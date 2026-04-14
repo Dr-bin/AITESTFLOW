@@ -1,3 +1,85 @@
+# Mock API 测试方法与覆盖统计说明（当前版）
+
+本文描述当前保留方案：使用 `tools/mock_petstore_server.py` 提供模拟 API，执行 `output/test_api.py`，并由模拟服务在响应过程中自动记录覆盖条件。
+
+---
+
+## 1. 当前方案概述
+
+- **被测对象**：`tools/mock_petstore_server.py`
+- **测试执行**：`python -m pytest output/test_api.py -v`
+- **覆盖统计来源**：模拟服务内置覆盖跟踪
+- **统计口径**：基于 `tools/petstore_分层覆盖对照表.md` 的 `C01..C47`
+- **特殊规则**：所有输出为 `500` 的条件默认不纳入覆盖率分母
+
+忽略的 `500` 条件：
+
+- `C04`、`C08`、`C14`、`C18`、`C21`、`C25`、`C30`、`C35`
+
+---
+
+## 2. 如何执行
+
+在项目根目录执行：
+
+```bash
+python tools/mock_petstore_server.py
+```
+
+新开终端执行测试：
+
+```bash
+python -m pytest output/test_api.py -v
+```
+
+查看覆盖统计：
+
+```bash
+curl http://127.0.0.1:8000/__coverage
+```
+
+重置覆盖记录（可选）：
+
+```bash
+curl -X POST http://127.0.0.1:8000/__coverage/reset
+```
+
+---
+
+## 3. 覆盖统计输出说明
+
+`GET /__coverage` 返回 JSON，关键字段如下：
+
+- `total_conditions_excluding_500`：分母（已剔除 500 条件）
+- `covered_conditions_excluding_500`：已覆盖条目数
+- `coverage_rate`：覆盖率
+- `covered_condition_ids`：已覆盖条件 ID 列表
+- `missing_condition_ids`：未覆盖条件 ID 列表
+- `ignored_500_condition_ids`：被忽略的 500 条件 ID
+
+---
+
+## 4. 与对照表的关系
+
+`tools/petstore_分层覆盖对照表.md` 中：
+
+- A/B 是人工分层视图（输入与输出）
+- C 是输入输出组合条件（`C01..C47`）
+
+当前 mock 覆盖统计直接对应 C 表条目，可用于：
+
+1. 快速定位未覆盖组合条件
+2. 与人工复核结果互相校验
+3. 为后续补充测试用例提供明确目标
+
+---
+
+## 5. 当前方案注意事项
+
+- `DELETE /pets/{petId}` 对种子数据做了稳定性处理，避免测试之间相互污染。
+- 统计口径默认不考核 500 分支（按当前项目约定）。
+- 若后续要恢复 500 分支考核，只需把对应 ID 从忽略列表移除，并补充可稳定触发 500 的测试机制。
+
 # Mock API 测试方法与等价类说明
 
 本文用于说明 `tools/mock_petstore_server.py` 的测试口径，帮助判断当前测试是否完备。
@@ -6,25 +88,27 @@
 
 - 被测对象：`tools/mock_petstore_server.py` 提供的本地模拟 API。
 - 规范来源：`input/sample_petstore.yaml`。
-- 执行入口：`tools/evaluate_real_coverage.py`，会启动 mock 服务并执行 `output/test_api.py`。
-- 覆盖率定义（真实口径）：**通过用例所覆盖的条件数 / 条件总数**。
+- 执行入口：`tools/mock_petstore_server.py` + `python -m pytest output/test_api.py -v`。
+- 覆盖率定义（真实口径）：**按 `tools/petstore_分层覆盖对照表.md` 人工勾选条目数 / 对照表条目总数**。
 
 说明：该覆盖率反映“测试是否在真实 HTTP 调用下通过”，不是静态声明覆盖。
 
 ## 2. 如何执行
 
-在项目根目录执行：
+在项目根目录按以下步骤执行：
 
 ```bash
-python tools/evaluate_real_coverage.py
+python tools/mock_petstore_server.py
+# 新开终端
+python -m pytest output/test_api.py -v
 ```
 
-输出文件：
+统计依据：
 
-- `output/real_coverage_report.json`
-  - `coverage.real_active_coverage`：真实覆盖率（主指标）
-  - `pytest.passed_test_ids` / `pytest.failed_test_ids`：通过/失败用例
-  - `spec_endpoint_coverage.coverage_rate`：接口操作覆盖率
+- `tools/petstore_分层覆盖对照表.md`
+  - 输入分层与输出分层分别勾选“是否已测”
+  - 以“已勾选 / 总条目”计算覆盖率
+  - 可附 pytest 通过/失败结果作为证据
 
 ## 3. Mock API 行为模型
 
@@ -138,7 +222,7 @@ python tools/evaluate_real_coverage.py
 
 ## 5. 完备性检查表（评审时建议逐项勾选）
 
-- 是否覆盖了 OpenAPI 的全部操作（`spec_endpoint_coverage` 是否为 100%）。
+- 是否覆盖了 OpenAPI 的全部操作（5 个接口操作是否都被触达）。
 - 每个输入参数是否至少包含：1 个有效类 + 1 个无效类 + 边界类（如适用）。
 - 是否覆盖了状态相关分支（存在/不存在、删除后再访问）。
 - 是否覆盖了典型响应码分支（200/201/204/400/404）。
@@ -146,10 +230,10 @@ python tools/evaluate_real_coverage.py
 
 ## 6. 对当前结果的解读建议
 
-- 若 `spec_endpoint_coverage=100%` 但 `real_active_coverage<100%`，通常表示：
+- 若接口触达为 100% 但人工覆盖率 <100%，通常表示：
   - 用例设计覆盖了接口，但部分等价类在真实执行中未通过（例如资源前置状态不满足）。
 - 优先修复顺序：
   1. 先修复状态依赖失败（创建/删除顺序、目标 id 是否存在）；
   2. 再补充缺失的等价类；
-  3. 最后复跑 `tools/evaluate_real_coverage.py` 验证是否收敛到目标覆盖率。
+  3. 最后重跑 pytest 并更新 `tools/petstore_分层覆盖对照表.md` 验证是否收敛到目标覆盖率。
 
