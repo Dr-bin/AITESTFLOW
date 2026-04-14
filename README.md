@@ -47,7 +47,7 @@ AITESTFLOW/
 │       ├── code_gen.py
 │       └── evaluator.py
 ├── tools/
-│   ├── mock_petstore_server.py     # 本地模拟 API（仅用于验证测试可执行）
+│   ├── mock_petstore_server.py     # 本地模拟 API（含内置覆盖追踪与 /__coverage）
 │   └── petstore_分层覆盖对照表.md   # 人工对照覆盖统计表
 └── tests/
     └── test_integration.py
@@ -60,7 +60,7 @@ AITESTFLOW/
 3. 将条件组合为可执行场景（`test_cases`）。
 4. 生成 pytest 代码并合并为 `output/test_api.py`。
 5. 进行 mock 校验并输出 `coverage_report.json`。
-6. 可选：启动本地模拟 API 验证 `output/test_api.py` 可执行，再基于 `tools/petstore_分层覆盖对照表.md` 人工统计真实覆盖率。
+6. 可选：启动本地模拟 API 执行 `output/test_api.py`，通过 `GET /__coverage` 获取真实执行覆盖率，并用 `tools/petstore_分层覆盖对照表.md` 复核。
 
 ## 环境要求
 
@@ -137,16 +137,17 @@ print(coverage.coverage_rate)
   流程执行日志，包含每个端点处理与迭代记录。
 
 - `tools/petstore_分层覆盖对照表.md`（推荐）  
-  基于真实 HTTP 执行结果的人工覆盖统计表（按输入/输出分层勾选并计算）。
+  输入/输出分层对照表，用于对 `mock_petstore_server.py` 的覆盖统计结果做人工复核与误差定位。
 
-## 真实覆盖率评估（人工对照，推荐）
+## 真实覆盖率评估（mock 内置统计 + 对照表复核）
 
 若需要执行真实请求验证（使用仓库内 mock API）：
 
 1. 启动本地模拟服务（`tools/mock_petstore_server.py`）。
-2. 执行 `python -m pytest output/test_api.py -v`。
-3. 将执行结果映射到 `tools/petstore_分层覆盖对照表.md` 勾选。
-4. 按“已勾选条目 / 总条目”手工计算覆盖率。
+2. （可选）重置覆盖计数：`POST http://127.0.0.1:8000/__coverage/reset`。
+3. 执行 `python -m pytest output/test_api.py -v`。
+4. 查看覆盖结果：`GET http://127.0.0.1:8000/__coverage`（返回总数、已覆盖、覆盖率、缺失 C-ID、忽略 500 条目）。
+5. 将缺失 C-ID 回查到 `tools/petstore_分层覆盖对照表.md`，定位缺口来源并指导下一轮提示词迭代。
 
 ## 常用命令
 
